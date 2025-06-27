@@ -1,0 +1,10 @@
+Features,Importance
+Cell_Size_Uniformity,0.8678931259400371
+Clump_Thickness,0.06970799044814456
+Bare_Nuclei,0.06239888361181842
+Cell_Shape_Uniformity,0.0
+Marginal_Adhesion,0.0
+Single_Epi_Cell_Size,0.0
+Bland_Chromatin,0.0
+Normal_Nucleoli,0.0
+Mitoses,0.0
