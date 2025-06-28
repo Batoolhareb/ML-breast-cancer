@@ -58,7 +58,7 @@ def model_training(df, buffer, original_stdout, label_encoders):
 
     print("\n💡 Feature Importances:")
     print(features)
-    features.to_csv("../output/feature_importance.csv", index=False)
+    features.to_csv("output/feature_importance.csv", index=False)
 
     # ➤ Evaluate on validation set
     y_val_pred = clf.predict(X_val)
@@ -78,7 +78,7 @@ def model_training(df, buffer, original_stdout, label_encoders):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
     disp.plot(cmap=plt.cm.Blues)
     plt.title("Confusion Matrix (Test Set)")
-    plt.savefig("../output/confusion_matrix.png")
+    plt.savefig("output/confusion_matrix.png")
     plt.close()
 
     # ➤ Save decision tree plot
@@ -86,17 +86,17 @@ def model_training(df, buffer, original_stdout, label_encoders):
     plot_tree(clf, feature_names=X.columns, class_names=[str(cls) for cls in clf.classes_],
               filled=True, rounded=True, fontsize=10)
     plt.title("Decision Tree (Trained on Training Set)")
-    plt.savefig("../output/decision_tree_sklearn.png")
+    plt.savefig("output/decision_tree_sklearn.png")
     plt.close()
 
     # ➤ Write captured output to file
-    with open("../output/result.txt", "w") as f:
+    with open("output/result.txt", "w") as f:
         f.write(buffer.getvalue())
 
     # ➤ Save model and encoders
-    joblib.dump(clf, "../model/model.joblib")
-    joblib.dump(label_encoders, "../model/encoders.joblib")
-    joblib.dump(X.columns.tolist(), "../model/feature_names.joblib")
+    joblib.dump(clf, "model/model.joblib")
+    joblib.dump(label_encoders, "model/encoders.joblib")
+    joblib.dump(X.columns.tolist(), "model/feature_names.joblib")
 
     sys.stdout = original_stdout
     print("✅ All results saved to:")
@@ -108,7 +108,7 @@ def main():
     sys.stdout = buffer = StringIO()
 
     try:
-        df = pd.read_csv("../dataset/dataset.csv")
+        df = pd.read_csv("dataset/dataset.csv")
         df = clean_data(df)
         df, label_encoders = encode_features(df)
         model_training(df, buffer, original_stdout, label_encoders)

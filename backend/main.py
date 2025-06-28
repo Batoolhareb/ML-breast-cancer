@@ -6,9 +6,9 @@ import pandas as pd
 app = FastAPI()
 
 # Load model and related assets
-model = joblib.load("../model/model.joblib")
-encoders = joblib.load("../model/encoders.joblib")
-features = joblib.load("../model/feature_names.joblib")
+model = joblib.load("model/model.joblib")
+encoders = joblib.load("model/encoders.joblib")
+features = joblib.load("model/feature_names.joblib")
 
 # Root endpoint
 @app.get("/")
