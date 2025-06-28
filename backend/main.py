@@ -2,20 +2,22 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
 import pandas as pd
+import os
 
 app = FastAPI()
 
-# Load model and related assets
-model = joblib.load("model/model.joblib")
-encoders = joblib.load("model/encoders.joblib")
-features = joblib.load("model/feature_names.joblib")
 
-# Root endpoint
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "..", "model")
+model = joblib.load(os.path.join(MODEL_DIR, "model.joblib"))
+encoders = joblib.load(os.path.join(MODEL_DIR, "encoders.joblib"))
+features = joblib.load(os.path.join(MODEL_DIR, "feature_names.joblib"))
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Predict API"}
 
-# Define the input schema
+# تعريف مدخلات النموذج
 class CancerFeatures(BaseModel):
     Clump_Thickness: int
     Cell_Size_Uniformity: int
@@ -27,9 +29,9 @@ class CancerFeatures(BaseModel):
     Normal_Nucleoli: int
     Mitoses: int
 
-# Prediction endpoint
 @app.post("/predict")
 def predict(features_input: CancerFeatures):
+    # تحويل المدخلات إلى DataFrame
     data = pd.DataFrame([[
         features_input.Clump_Thickness,
         features_input.Cell_Size_Uniformity,
