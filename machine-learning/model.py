@@ -99,7 +99,7 @@ def model_training(df, buffer, original_stdout, label_encoders):
     joblib.dump(X.columns.tolist(), "../model/feature_names.joblib")
 
     sys.stdout = original_stdout
-    print("✅ All results saved to:")
+ 
  
     
 def main():
