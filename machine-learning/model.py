@@ -108,7 +108,7 @@ def main():
     sys.stdout = buffer = StringIO()
 
     try:
-        df = pd.read_csv("../dataset/dataset.csv")
+        df = pd.read_csv("dataset/dataset.csv")
         df = clean_data(df)
         df, label_encoders = encode_features(df)
         model_training(df, buffer, original_stdout, label_encoders)
