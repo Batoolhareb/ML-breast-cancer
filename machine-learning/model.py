@@ -6,7 +6,14 @@ from sklearn.metrics import classification_report, confusion_matrix, ConfusionMa
 from sklearn.preprocessing import LabelEncoder
 import joblib
 import sys
+import os
 from io import StringIO
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, "..", "dataset", "dataset.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "..", "output")
+MODEL_DIR = os.path.join(BASE_DIR, "..", "model")
 
 def clean_data(df):
     df = df.replace("?", pd.NA)
@@ -25,14 +32,15 @@ def encode_features(df):
     return df, label_encoders
 
 def model_training(df, buffer, original_stdout, label_encoders):
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
     target_column = df.columns[-1]
     X = df.drop(columns=[target_column])
     y = df[target_column]
 
-    # ➤ Split: 80% training+validation, 20% testing
-    X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=42) 
-
-    # ➤ Split training+validation into 70% training, 30% validation
+    # ➤ Split
+    X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.3, random_state=42)
 
     print(f"\n📁 Data Split Summary:")
@@ -50,7 +58,7 @@ def model_training(df, buffer, original_stdout, label_encoders):
     
     clf.fit(X_train, y_train)
 
-    # ➤ Feature Importance
+    # ➤ Feature importance
     features = pd.DataFrame({
         "Features": X.columns,
         "Importance": clf.feature_importances_
@@ -58,19 +66,19 @@ def model_training(df, buffer, original_stdout, label_encoders):
 
     print("\n💡 Feature Importances:")
     print(features)
-    features.to_csv("output/feature_importance.csv", index=False)
+    features.to_csv(os.path.join(OUTPUT_DIR, "feature_importance.csv"), index=False)
 
-    # ➤ Evaluate on validation set
+    # ➤ Validation evaluation
     y_val_pred = clf.predict(X_val)
     print("\n🔍 Validation Set Evaluation:")
     print(classification_report(y_val, y_val_pred))
 
-    # ➤ Evaluate on test set
+    # ➤ Test evaluation
     y_test_pred = clf.predict(X_test)
     print("\n✅ Test Set Evaluation:")
     print(classification_report(y_test, y_test_pred))
 
-    # ➤ Confusion matrix for test
+    # ➤ Confusion matrix
     cm = confusion_matrix(y_test, y_test_pred)
     print("\n🧮 Confusion Matrix (Test Set):\n")
     print(cm)
@@ -78,37 +86,35 @@ def model_training(df, buffer, original_stdout, label_encoders):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
     disp.plot(cmap=plt.cm.Blues)
     plt.title("Confusion Matrix (Test Set)")
-    plt.savefig("output/confusion_matrix.png")
+    plt.savefig(os.path.join(OUTPUT_DIR, "confusion_matrix.png"))
     plt.close()
 
-    # ➤ Save decision tree plot
+    # ➤ Decision tree plot
     plt.figure(figsize=(20, 10))
     plot_tree(clf, feature_names=X.columns, class_names=[str(cls) for cls in clf.classes_],
               filled=True, rounded=True, fontsize=10)
     plt.title("Decision Tree (Trained on Training Set)")
-    plt.savefig("output/decision_tree_sklearn.png")
+    plt.savefig(os.path.join(OUTPUT_DIR, "decision_tree_sklearn.png"))
     plt.close()
 
-    # ➤ Write captured output to file
-    with open("output/result.txt", "w") as f:
+    # ➤ Write captured output
+    with open(os.path.join(OUTPUT_DIR, "result.txt"), "w") as f:
         f.write(buffer.getvalue())
 
-    # ➤ Save model and encoders
-    joblib.dump(clf, "model/model.joblib")
-    joblib.dump(label_encoders, "model/encoders.joblib")
-    joblib.dump(X.columns.tolist(), "model/feature_names.joblib")
+    # ➤ Save model
+    joblib.dump(clf, os.path.join(MODEL_DIR, "model.joblib"))
+    joblib.dump(label_encoders, os.path.join(MODEL_DIR, "encoders.joblib"))
+    joblib.dump(X.columns.tolist(), os.path.join(MODEL_DIR, "feature_names.joblib"))
 
     sys.stdout = original_stdout
-    print("✅ All results saved to:")
-    print("   - output.txt")
-    print("   - confusion_matrix.png")
-    
+    print("✅ All results saved.")
+
 def main():
     original_stdout = sys.stdout
     sys.stdout = buffer = StringIO()
 
     try:
-        df = pd.read_csv("dataset/dataset.csv")
+        df = pd.read_csv(DATASET_PATH)
         df = clean_data(df)
         df, label_encoders = encode_features(df)
         model_training(df, buffer, original_stdout, label_encoders)
