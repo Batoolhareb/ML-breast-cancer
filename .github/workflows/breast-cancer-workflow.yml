@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest backend/test/test_main.py
+          pytest test/test_main.py
 
   continue-ci:
     name: Continue to CI/CD
