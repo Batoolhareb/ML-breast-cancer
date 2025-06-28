@@ -99,6 +99,9 @@ def model_training(df, buffer, original_stdout, label_encoders):
     joblib.dump(X.columns.tolist(), "../model/feature_names.joblib")
 
     sys.stdout = original_stdout
+    print("✅ All results saved to:")
+    print("   - output.txt")
+    print("   - confusion_matrix.png")
     
 def main():
     original_stdout = sys.stdout
