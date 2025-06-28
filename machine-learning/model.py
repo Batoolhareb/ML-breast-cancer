@@ -94,9 +94,9 @@ def model_training(df, buffer, original_stdout, label_encoders):
         f.write(buffer.getvalue())
 
     # ➤ Save model and encoders
-    joblib.dump(clf, "../model/model.joblib")
-    joblib.dump(label_encoders, "../model/encoders.joblib")
-    joblib.dump(X.columns.tolist(), "../model/feature_names.joblib")
+    joblib.dump(clf, "model/model.joblib")
+    joblib.dump(label_encoders, "model/encoders.joblib")
+    joblib.dump(X.columns.tolist(), "model/feature_names.joblib")
 
     sys.stdout = original_stdout
     print("✅ All results saved to:")
