@@ -1,4 +1,5 @@
 name: breast-cancer-workflow
+
 on:
   pull_request:
     branches:
@@ -10,31 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      - name: List directory
-              run: ls -R
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pytest
 
-      - name: Run Tests
+      - name: Run tests
         run: |
-           /backend  pytest 
+          pytest backend/test/test_main.py
 
-  ci:
+  continue-ci:
     name: Continue to CI/CD
     needs: run-tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Proceed if Tests Pass
-        run: echo "Tests passed, proceeding with CI/CD steps..."
+      - name: Confirm test pass
+        run: echo "✅ Tests passed. Proceeding to CI/CD..."
