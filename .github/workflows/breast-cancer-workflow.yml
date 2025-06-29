@@ -44,7 +44,7 @@ jobs:
 
       - name: 🎨 Start Streamlit frontend (brief check)
         run: |
-          nohup streamlit run frontend/app.py --server.headless true --server.port 8501 &
+          nohup streamlit run frontend/index.py --server.headless true --server.port 8501 &
           STREAMLIT_PID=$!
           echo "Waiting for Streamlit to start..."
           for i in {1..10}; do
