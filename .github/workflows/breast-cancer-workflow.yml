@@ -27,16 +27,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install -r machine-learning/requirements.txt
-          pip install pytest
+          pip install streamlit requests joblib pytest scikit-learn matplotlib pandas
 
       - name: Train model (generate model.joblib)
         run: |
           python machine-learning/model.py
 
-      - name: Run tests
+      - name: Run backend tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
           pytest backend/test
+
+      - name: Start FastAPI backend (in background)
+        run: |
+          pip install uvicorn
+          nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+
+      - name: Start Streamlit frontend (in background)
+        run: |
+          nohup streamlit run frontend/app.py --server.headless true &
+          sleep 10
+
+      - name: Check Streamlit is running
+        run: |
+          curl -I http://localhost:8501 | grep "200 OK"
 
   ci-step:
     name: CI Step - Build/Validate Artifacts
@@ -52,12 +67,10 @@ jobs:
         with:
           python-version: "3.10"
 
-  
-      - name: Build or package application
+      - name: CI logic - linting, packaging etc.
         run: |
           echo "CI step: Building/validating the project..."
-          # Add CI logic here, e.g., linting, packaging, etc.
-          # Example: flake8 backend/, or python setup.py sdist
+       
 
   cd-step:
     name: CD Step - Deploy Application
@@ -73,10 +86,7 @@ jobs:
         with:
           python-version: "3.10"
 
-
-
-      - name: Deploy application/model
+      - name: CD logic - Deploying
         run: |
           echo "CD step: Deploying application/model..."
-          # Add actual deployment logic here
-          # e.g., rsync, AWS CLI, Docker push, etc.
+          
