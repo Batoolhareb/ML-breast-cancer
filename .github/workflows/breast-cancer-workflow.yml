@@ -40,9 +40,10 @@ jobs:
 
       - name: Start FastAPI backend (in background)
         run: |
-          pip install uvicorn
-          nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
-          sleep 5
+            pip install uvicorn
+            nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+            sleep 5
+
 
       - name: Start Streamlit frontend (in background)
         run: |
