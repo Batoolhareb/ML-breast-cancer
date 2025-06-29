@@ -10,49 +10,53 @@ on:
 
 jobs:
   run-tests:
-    name: Run Unit Tests
+    name: Run Backend & Frontend Checks
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install -r machine-learning/requirements.txt
-          pip install streamlit requests joblib pytest scikit-learn matplotlib pandas
+          pip install streamlit requests joblib pytest scikit-learn matplotlib pandas uvicorn
 
-      - name: Train model (generate model.joblib)
-        run: |
-          python machine-learning/model.py
+      - name: 🧠 Train model (generate model.joblib)
+        run: python machine-learning/model.py
 
-      - name: Run backend tests
+      - name: ✅ Run backend unit tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
           pytest backend/test
 
-      - name: Start FastAPI backend (in background)
+      - name: 🚀 Start FastAPI backend
         run: |
-            pip install uvicorn
-            nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
-            sleep 5
+          nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
 
-
-      - name: Start Streamlit frontend (in background)
+      - name: 🎨 Start Streamlit frontend (brief check)
         run: |
-          nohup streamlit run frontend/index.py 
-          sleep 10
-
-      - name: Check Streamlit is running
-        run: |
-          curl -I http://localhost:8501 | grep "200 OK"
+          nohup streamlit run frontend/app.py --server.headless true --server.port 8501 &
+          STREAMLIT_PID=$!
+          echo "Waiting for Streamlit to start..."
+          for i in {1..10}; do
+            if curl -sSf http://localhost:8501 > /dev/null; then
+              echo "✅ Streamlit is up!"
+              break
+            fi
+            echo "⏳ Still waiting..."
+            sleep 3
+          done
+          echo "🔴 Killing Streamlit (PID $STREAMLIT_PID)..."
+          kill $STREAMLIT_PID
 
   ci-step:
     name: CI Step - Build/Validate Artifacts
@@ -60,18 +64,13 @@ jobs:
     needs: run-tests
 
     steps:
-      - name: Checkout repository
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: CI logic - linting, packaging etc.
+      - name: 🧪 CI Logic (e.g., linting)
         run: |
-          echo "CI step: Building/validating the project..."
-       
+          echo "CI step: Validate formatting, linting, etc."
+          # pip install flake8 && flake8 backend/
 
   cd-step:
     name: CD Step - Deploy Application
@@ -79,15 +78,11 @@ jobs:
     needs: ci-step
 
     steps:
-      - name: Checkout repository
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: CD logic - Deploying
+      - name: 🚀 CD logic - Deploy
         run: |
-          echo "CD step: Deploying application/model..."
-          
+          echo "CD step: Deploy application/model"
+          # Example:
+          # scp model.joblib user@server:/path/to/deploy
