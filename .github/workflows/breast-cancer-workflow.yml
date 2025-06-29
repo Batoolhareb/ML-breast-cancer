@@ -46,19 +46,19 @@ jobs:
         run: |
            nohup streamlit run frontend/index.py --server.headless true --server.port 8501 &
             STREAMLIT_PID=$!
-            echo "⏳ Waiting for Streamlit to start..."
+            echo "Waiting for Streamlit to start..."
     
             for i in {1..20}; do
                 if curl -sSf http://localhost:8501 > /dev/null; then
-                echo "✅ Streamlit is up after $i attempts!"
+                echo "Streamlit is up after $i attempts!"
                kill $STREAMLIT_PID
                 exit 0
               fi
-                echo "   ❗ Attempt $i failed, retrying..."
+                echo "Attempt $i failed, retrying..."
             sleep 3
             done
 
-            echo "❌ Streamlit did not start within 60 seconds"
+            echo "Streamlit did not start within 60 seconds"
             kill $STREAMLIT_PID
               exit 1
 
