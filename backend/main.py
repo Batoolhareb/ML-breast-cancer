@@ -17,7 +17,7 @@ features = joblib.load(os.path.join(MODEL_DIR, "feature_names.joblib"))
 def read_root():
     return {"message": "Welcome to Predict API"}
 
-# تعريف مدخلات النموذج
+
 class CancerFeatures(BaseModel):
     Clump_Thickness: int
     Cell_Size_Uniformity: int
@@ -31,7 +31,7 @@ class CancerFeatures(BaseModel):
 
 @app.post("/predict")
 def predict(features_input: CancerFeatures):
-    # تحويل المدخلات إلى DataFrame
+    
     data = pd.DataFrame([[
         features_input.Clump_Thickness,
         features_input.Cell_Size_Uniformity,

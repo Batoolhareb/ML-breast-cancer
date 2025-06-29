@@ -43,10 +43,7 @@ def model_training(df, buffer, original_stdout, label_encoders):
     X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=0.3, random_state=42)
 
-    print(f"\n📁 Data Split Summary:")
-    print(f"  Training set: {X_train.shape[0]} samples")
-    print(f"  Validation set: {X_val.shape[0]} samples")
-    print(f"  Test set: {X_test.shape[0]} samples")
+
 
     # ➤ Train model
     clf = DecisionTreeClassifier(criterion="entropy", random_state=70, ccp_alpha=0.03)
