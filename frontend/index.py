@@ -1,8 +1,6 @@
 import streamlit as st
 import requests
-from PIL import Image
-import base64
-from io import BytesIO
+
 
 # Set page configuration
 st.set_page_config(
@@ -47,10 +45,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# App header
+
 col1, col2 = st.columns([1, 3])
 with col1:
-    # Use a base64 encoded pink ribbon as fallback if image file is missing
+
     pink_ribbon = """
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
         <path fill="#e75480" d="M50,10 C60,20 70,30 80,40 C90,50 95,60 95,70 C95,80 90,85 80,85 C70,85 60,80 50,70 C40,80 30,85 20,85 C10,85 5,80 5,70 C5,60 10,50 20,40 C30,30 40,20 50,10 Z"/>
@@ -67,7 +65,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-# Organize inputs in columns for better layout
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -94,15 +92,15 @@ with col2:
     Mitoses = st.slider("Mitoses", 1, 10, 5,
                        help="Rate of cell division")
 
-# Add some spacing
+
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Center the predict button
+
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
     predict_button = st.button("Assess Risk", key="predict")
 
-# Prediction logic
+
 if predict_button:
     with st.spinner("Analyzing the data..."):
         payload = {
@@ -118,7 +116,7 @@ if predict_button:
         }
 
         try:
-            # Replace with your actual FastAPI backend URL
+           
             response = requests.post("http://127.0.0.1:8000/predict", json=payload)
             response.raise_for_status()
             
@@ -133,7 +131,7 @@ if predict_button:
                 st.success(f"✅ **Assessment Result:** {diagnosis}")
                 st.info("This result suggests benign characteristics. Regular follow-ups are still recommended as per standard screening guidelines.")
                 
-            # Add disclaimer
+           
             st.markdown("""
             <div style='font-size: 0.8rem; color: #666; margin-top: 2rem;'>
                 <strong>Disclaimer:</strong> This tool is for informational purposes only and should not replace 
