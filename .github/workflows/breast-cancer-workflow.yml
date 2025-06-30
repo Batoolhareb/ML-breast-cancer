@@ -71,7 +71,7 @@ jobs:
       - name:  Checkout repository
         uses: actions/checkout@v3
 
-      - name: CI Logic (e.g., linting)
+      - name: CI Logic
         run: |
           echo "CI step: Validate formatting, linting, etc."
          
