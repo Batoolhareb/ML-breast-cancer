@@ -73,19 +73,5 @@ jobs:
 
       - name: CI Logic
         run: |
-          echo "CI step: Validate formatting, linting, etc."
+          echo "CI step: Validate formatting"
          
-
-  cd-step:
-    name: CD Step - Deploy Application
-    runs-on: ubuntu-latest
-    needs: ci-step
-
-    steps:
-      - name:  Checkout repository
-        uses: actions/checkout@v3
-
-      - name:  CD logic - Deploy
-        run: |
-          echo "CD step: Deploy application/model"
-          
