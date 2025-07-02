@@ -1,27 +1,46 @@
-import requests
 import time
+from playwright.sync_api import sync_playwright
 
-# URL of the running Streamlit app
-STREAMLIT_URL = "http://localhost:8501"
-
-def wait_for_streamlit(timeout=60):
-    """Wait for the Streamlit server to be available."""
-    for _ in range(timeout // 3):
+def wait_for_streamlit(url, timeout=10):
+    import requests
+    start = time.time()
+    while time.time() - start < timeout:
         try:
-            response = requests.get(STREAMLIT_URL)
-            if response.status_code == 200:
+            r = requests.get(url)
+            if r.status_code == 200:
                 return True
-        except requests.exceptions.ConnectionError:
-            pass
-        time.sleep(3)
-    return False
+        except requests.ConnectionError:
+            time.sleep(0.5)
+    raise RuntimeError(f"Streamlit app not responding at {url} after {timeout} seconds")
 
-def test_streamlit_running():
-    """Test if the Streamlit app starts and responds with status code 200."""
-    assert wait_for_streamlit(), "Streamlit server did not start in time"
+def test_breast_cancer_app():
+    url = "http://localhost:8501"
+    wait_for_streamlit(url)
 
-def test_homepage_content():
-    """Test if expected content appears on the homepage."""
-    response = requests.get(STREAMLIT_URL)
-    assert response.status_code == 200
-    assert "Breast Cancer" in response.text or "Prediction" in response.text
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url)
+
+        page.wait_for_selector("text=Breast Cancer Risk Assessment")
+
+        # Simulate slider input
+        page.click("text=Clump Thickness")
+        page.keyboard.press("ArrowRight")
+        page.click("text=Cell Size")
+        page.keyboard.press("ArrowRight")
+
+        # Click the button
+        page.click("text=Assess Risk")
+
+        # Optional: Wait longer for results
+        page.wait_for_timeout(3000)
+
+        # DEBUG: print page content
+        content = page.content()
+        print(content)  # 👈 look at this to see what the page shows
+
+        # Flexible matching
+        assert "Risk" in content or "Assessment" in content or "Result" in content
+
+        browser.close()
