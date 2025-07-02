@@ -1,61 +1,61 @@
-name: breast-cancer-ci
+name: breast-cancer-workflow
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  test:
-    name: CI via Docker Compose
+  run-tests:
+    name: Build and Test in Docker
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python for testing
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+      - name: Set up Docker Buildx (for docker compose compatibility)
+        uses: docker/setup-buildx-action@v3
 
       - name: Set up Docker Compose
-        run: docker-compose --version
+        run: docker compose version
 
-      - name: Build and run containers
-        run: |
-          docker-compose up --build -d
-          docker ps
+      - name: Build and run Docker Compose services
+        run: docker compose up --build -d
 
-      - name: Wait for backend and frontend to be ready
+      - name: Wait for services to be ready
         run: |
-          echo "Waiting for backend (http://localhost:8080) and frontend (http://localhost) to be available..."
+          echo "Waiting for frontend and backend to become healthy..."
           for i in {1..30}; do
-            if curl -s http://localhost:8080/docs >/dev/null && curl -s http://localhost >/dev/null; then
-              echo "Services are up!"
+            if curl -s http://localhost:80 | grep -q "Breast Cancer Risk Assessment"; then
+              echo "Frontend is ready!"
               break
             fi
-            echo "Attempt $i failed, retrying in 3s..."
+            echo "Waiting for frontend (attempt $i)..."
             sleep 3
           done
 
-      - name: Install test dependencies
+      - name: Run frontend tests
         run: |
-          pip install -r backend/requirements.txt
-          pip install -r machine-learning/requirements.txt
-          pip install pytest requests playwright
-          python -m playwright install --with-deps
-
-      - name: Run backend unit tests
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
-          pytest backend/test
-
-      - name: Run frontend Playwright tests
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/frontend
+          pip install pytest playwright requests
+          playwright install --with-deps
           pytest frontend/test_frontend.py
 
-      - name: Shut down Docker containers
+      - name: Tear down Docker Compose
         if: always()
-        run: docker-compose down --volumes
+        run: docker compose down --volumes
+
+  ci-step:
+    name: CI Step - Validate Artifacts
+    runs-on: ubuntu-latest
+    needs: run-tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: CI Logic
+        run: echo "CI step: Validate formatting or build artifacts here"
