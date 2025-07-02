@@ -14,7 +14,7 @@ def wait_for_streamlit(url, timeout=10):
     raise RuntimeError(f"Streamlit app not responding at {url} after {timeout} seconds")
 
 def test_breast_cancer_app():
-    url = "http://localhost:8501"
+    url = "http://localhost:80"
     wait_for_streamlit(url)
 
     with sync_playwright() as p:
