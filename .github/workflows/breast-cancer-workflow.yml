@@ -7,24 +7,40 @@ on:
     branches: [main]
 
 jobs:
-  docker-ci:
-    name: Run Docker-based CI
+  test-and-docker:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-      - name: Install Docker Compose
+      - name: Install dependencies for tests
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          python -m pip install --upgrade pip
+          pip install pytest requests playwright
 
-      - name: Build and start services
+      - name: Install Playwright browsers
+        run: playwright install --with-deps
+
+      - name: Start Docker Compose services
         run: docker-compose up -d --build
+
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend on port 8080..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/docs > /dev/null; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Still waiting for backend... ($i)"
+            sleep 3
+          done
 
       - name: Wait for frontend to be ready
         run: |
@@ -34,31 +50,13 @@ jobs:
               echo "Frontend is ready!"
               break
             fi
-            echo "Still waiting... ($i)"
+            echo "Still waiting for frontend... ($i)"
             sleep 3
           done
 
-      - name: Run tests inside frontend container
-        run: |
-          docker exec frontend-cancer bash -c "
-            pip install -r /app/requirements.txt
-            pip install pytest playwright requests
-            playwright install --with-deps
-            pytest /app/test_frontend.py
-          "
+      - name: Run frontend tests (outside Docker)
+        run: pytest frontend/test_frontend.py
 
-      - name: Tear down services
+      - name: Tear down Docker Compose services
         if: always()
         run: docker-compose down --volumes
-
-  ci-step:
-    name: CI Step - Post-Test Validation
-    runs-on: ubuntu-latest
-    needs: docker-ci
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Final CI validation
-        run: echo "✅ CI validation passed after container tests!"
