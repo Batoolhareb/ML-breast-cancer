@@ -7,9 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  run-tests:
+  test:
     runs-on: ubuntu-latest
-    name: Run frontend and backend tests
 
     steps:
       - name: Checkout repository
@@ -26,16 +25,15 @@ jobs:
           pip install pytest requests playwright
           playwright install --with-deps
 
-      - name: Run backend tests
-        run: pytest backend/tests
-
-      - name: Run frontend tests
+      - name: Run frontend tests (outside Docker)
         run: pytest frontend/test_frontend.py
 
-  ci-with-docker:
+      - name: Run backend tests (outside Docker)
+        run: pytest backend/test_backend.py
+
+  ci:
+    needs: test
     runs-on: ubuntu-latest
-    name: CI steps with Docker
-    needs: run-tests
 
     steps:
       - name: Checkout repository
