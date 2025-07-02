@@ -1,0 +1,23 @@
+services:
+  backend: 
+    build: ./backend 
+    container_name: backend-cancer
+    ports: 
+      - "8080:8000"
+    volumes: 
+      - ./dataset:/dataset:ro
+      - ./model:/model:ro
+    restart: unless-stopped 
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: "http://backend:8000" 
+    container_name: frontend-cancer
+    ports:
+      - "80:8501"
+    restart: unless-stopped 
+volumes:
+  dataset:
+
+  model:

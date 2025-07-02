@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import requests
 
@@ -116,8 +117,10 @@ if predict_button:
         }
 
         try:
-           
-            response = requests.post("http://127.0.0.1:8000/predict", json=payload)
+            DEFAULT_BACKEND_URL = "http://0.0.0.0:8080"
+            BACKEND_URL = os.environ.get("BACKEND_URL", DEFAULT_BACKEND_URL)
+
+            response = requests.post(f"{BACKEND_URL}/predict/", json=payload)
             response.raise_for_status()
             
             result = response.json()
