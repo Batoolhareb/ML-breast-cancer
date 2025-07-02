@@ -44,23 +44,25 @@ jobs:
 
       - name: Start Streamlit frontend (brief check)
         run: |
-           nohup streamlit run frontend/index.py --server.headless true --server.port 8501 &
-            STREAMLIT_PID=$!
-            echo "Waiting for Streamlit to start..."
-    
-            for i in {1..20}; do
-                if curl -sSf http://localhost:8501 > /dev/null; then
-                echo "Streamlit is up after $i attempts!"
-               kill $STREAMLIT_PID
-                exit 0
+          nohup streamlit run frontend/index.py --server.headless true --server.port 8501 &
+          STREAMLIT_PID=$!
+          echo "Waiting for Streamlit to start..."
+          for i in {1..20}; do
+              if curl -sSf http://localhost:8501 > /dev/null; then
+                  echo "Streamlit is up after $i attempts!"
+                  break
               fi
-                echo "Attempt $i failed, retrying..."
-            sleep 3
-            done
+              echo "Attempt $i failed, retrying..."
+              sleep 3
+          done
 
-            echo "Streamlit did not start within 60 seconds"
-            kill $STREAMLIT_PID
-              exit 1
+      - name: Run frontend tests
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/frontend
+          pytest frontend/test_frontend.py 
+      - name: Kill Streamlit after test
+        run: |
+          pkill -f "streamlit"
 
   ci-step:
     name: CI Step - Build/Validate Artifacts
@@ -68,10 +70,9 @@ jobs:
     needs: run-tests
 
     steps:
-      - name:  Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: CI Logic
         run: |
           echo "CI step: Validate formatting"
-         
