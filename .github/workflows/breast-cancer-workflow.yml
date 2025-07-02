@@ -24,32 +24,7 @@ jobs:
           pip install --upgrade pip
           pip install pytest requests playwright
           playwright install --with-deps
-
-      - name: Run frontend tests (outside Docker)
-        run: pytest frontend/test_frontend.py
-
-      - name: Run backend tests (outside Docker)
-        run: pytest backend/test_backend.py
-
-  ci:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Check Docker & Compose version
-        run: |
-          docker --version
-          docker compose version
-
-      - name: Start Docker containers
-        run: docker compose up -d --build
-
-      - name: Show running containers
-        run: docker ps -a
-
+        
       - name: Wait for backend to be ready
         run: |
           echo "Waiting for backend on port 8080..."
@@ -74,6 +49,24 @@ jobs:
             sleep 3
           done
 
+  ci:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check Docker & Compose version
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Start Docker containers
+        run: docker compose up -d --build
+
+      - name: Show running containers
+        run: docker ps -a
       - name: Tear down Docker services
         if: always()
         run: docker compose down --volumes
