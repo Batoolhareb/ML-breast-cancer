@@ -22,12 +22,16 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install -r machine-learning/requirements.txt
-          pip install streamlit requests joblib pytest scikit-learn matplotlib pandas uvicorn
+          pip install streamlit requests joblib pytest scikit-learn matplotlib pandas uvicorn playwright
+
+      - name: Install Playwright browsers
+        run: |
+          python -m playwright install --with-deps
 
       - name: Train model (generate model.joblib)
         run: python machine-learning/model.py
@@ -42,26 +46,17 @@ jobs:
           nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
           sleep 5
 
-      - name: Start Streamlit frontend (brief check)
+      - name: Start Streamlit frontend
         run: |
           nohup streamlit run frontend/index.py --server.headless true --server.port 8501 &
-          STREAMLIT_PID=$!
-          echo "Waiting for Streamlit to start..."
-          for i in {1..20}; do
-              if curl -sSf http://localhost:8501 > /dev/null; then
-                  echo "Streamlit is up after $i attempts!"
-                  break
-              fi
-              echo "Attempt $i failed, retrying..."
-              sleep 3
-          done
+          sleep 10  # Give the app time to start
 
-      - name: Run frontend tests
+      - name: Run frontend tests with Playwright
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)/frontend
-          pytest frontend/test_frontend.py  # Adjust this path as needed
+          pytest frontend/test_frontend.py
 
-      - name: Kill Streamlit after test
+      - name: Kill Streamlit after tests
         run: |
           pkill -f "streamlit"
 
