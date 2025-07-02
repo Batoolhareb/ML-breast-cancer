@@ -7,8 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  test-and-docker:
+  run-tests:
     runs-on: ubuntu-latest
+    name: Run frontend and backend tests
 
     steps:
       - name: Checkout repository
@@ -24,6 +25,21 @@ jobs:
           pip install --upgrade pip
           pip install pytest requests playwright
           playwright install --with-deps
+
+      - name: Run backend tests
+        run: pytest backend/tests
+
+      - name: Run frontend tests
+        run: pytest frontend/test_frontend.py
+
+  ci-with-docker:
+    runs-on: ubuntu-latest
+    name: CI steps with Docker
+    needs: run-tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Check Docker & Compose version
         run: |
@@ -59,9 +75,6 @@ jobs:
             echo "Still waiting for frontend... ($i)"
             sleep 3
           done
-
-      - name: Run frontend tests (outside Docker)
-        run: pytest frontend/test_frontend.py
 
       - name: Tear down Docker services
         if: always()
