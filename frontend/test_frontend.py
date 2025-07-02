@@ -24,23 +24,23 @@ def test_breast_cancer_app():
 
         page.wait_for_selector("text=Breast Cancer Risk Assessment")
 
-        # Simulate slider input
+        
         page.click("text=Clump Thickness")
         page.keyboard.press("ArrowRight")
         page.click("text=Cell Size")
         page.keyboard.press("ArrowRight")
 
-        # Click the button
+     
         page.click("text=Assess Risk")
 
-        # Optional: Wait longer for results
+      
         page.wait_for_timeout(3000)
 
-        # DEBUG: print page content
+        
         content = page.content()
-        print(content)  # 👈 look at this to see what the page shows
+        print(content) 
 
-        # Flexible matching
+       
         assert "Risk" in content or "Assessment" in content or "Result" in content
 
         browser.close()
