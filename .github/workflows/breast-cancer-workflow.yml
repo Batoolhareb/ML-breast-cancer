@@ -14,6 +14,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Check Docker & Compose version
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Start Docker containers
+        run: docker compose up -d --build
+
+      - name: Show running containers
+        run: docker ps -a
+
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
@@ -33,18 +44,6 @@ jobs:
           pip install pytest requests playwright
           playwright install --with-deps
         
-      - name: Start backend server
-        run: |
-          cd backend
-          uvicorn main:app --host 0.0.0.0 --port 8080 &
-          echo "Backend starting in background..."
-
-      - name: Start frontend server
-        run: |
-          cd frontend
-          streamlit run app.py --server.port 80 &
-          echo "Frontend starting in background..."
-          
       - name: Wait for backend to be ready
         run: |
           echo "Waiting for backend on port 8080..."
@@ -75,55 +74,6 @@ jobs:
       - name: Run backend tests
         run: pytest backend/test_backend.py
 
-  ci:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Check Docker & Compose version
-        run: |
-          docker --version
-          docker compose version
-
-      - name: Build and start Docker containers
-        run: docker compose up -d --build
-
-      - name: Show running containers
-        run: docker ps -a
-        
-      - name: Wait for backend to be ready
-        run: |
-          echo "Waiting for backend on port 8080..."
-          for i in {1..30}; do
-            if curl -s http://localhost:8080/docs > /dev/null; then
-              echo "Backend is ready!"
-              break
-            fi
-            echo "Still waiting for backend... ($i)"
-            sleep 3
-          done
-
-      - name: Wait for frontend to be ready
-        run: |
-          echo "Waiting for frontend on port 80..."
-          for i in {1..30}; do
-            if curl -s http://localhost:80 | grep -q "Breast Cancer Risk Assessment"; then
-              echo "Frontend is ready!"
-              break
-            fi
-            echo "Still waiting for frontend... ($i)"
-            sleep 3
-          done
-
-      - name: Run frontend tests (in Docker environment)
-        run: pytest frontend/test_frontend.py
-
-      - name: Run backend tests (in Docker environment)
-        run: pytest backend/test_backend.py
-        
       - name: Tear down Docker services
         if: always()
         run: docker compose down --volumes
