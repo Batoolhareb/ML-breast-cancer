@@ -72,7 +72,7 @@ jobs:
         run: pytest frontend/test_frontend.py
 
       - name: Run backend tests
-        run: pytest backend/test_backend.py
+        run: pytest backend/test_main.py
 
       - name: Tear down Docker services
         if: always()
