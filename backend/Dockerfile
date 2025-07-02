@@ -1,7 +1,6 @@
 FROM python:3.10
 
 WORKDIR /backend
-
 # Set pip configuration
 ENV PIP_DEFAULT_TIMEOUT=300
 ENV PIP_RETRIES=10
