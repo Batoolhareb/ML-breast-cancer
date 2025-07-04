@@ -14,22 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Check Docker & Compose version
-        run: |
-          docker --version
-          docker compose version
-
-      - name: Start Docker containers
-        run: docker compose up -d --build
-
-      - name: Show running containers
-        run: docker ps -a
-
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          
+
       - name: Cache pip
         uses: actions/cache@v3
         with:
@@ -41,9 +30,25 @@ jobs:
       - name: Install test dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest requests playwright
+          pip install pytest requests playwright streamlit
           playwright install --with-deps
+
+      - name: Start Streamlit app
+        run: |
+          nohup streamlit run index.py --server.port 8501 &
         
+      - name: Wait for frontend (Streamlit) to be ready
+        run: |
+          echo "Waiting for frontend on port 8501..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8501 | grep -q "Breast Cancer Risk Assessment"; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Still waiting for frontend... ($i)"
+            sleep 3
+          done
+
       - name: Wait for backend to be ready
         run: |
           echo "Waiting for backend on port 8080..."
@@ -56,24 +61,8 @@ jobs:
             sleep 3
           done
 
-      - name: Wait for frontend to be ready
-        run: |
-          echo "Waiting for frontend on port 80..."
-          for i in {1..30}; do
-            if curl -s http://localhost:80 | grep -q "Breast Cancer Risk Assessment"; then
-              echo "Frontend is ready!"
-              break
-            fi
-            echo "Still waiting for frontend... ($i)"
-            sleep 3
-          done
-
       - name: Run frontend tests
         run: pytest frontend/test_frontend.py
 
       - name: Run backend tests
         run: pytest backend/test_main.py
-
-      - name: Tear down Docker services
-        if: always()
-        run: docker compose down --volumes
