@@ -66,7 +66,7 @@ jobs:
           done
 
       - name: Run backend tests
-        run: pytest backend/test_main.py
+        run: pytest backend/test/test_main.py
 
       - name: Show Streamlit logs on failure
         if: failure()
