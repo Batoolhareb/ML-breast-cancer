@@ -31,6 +31,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pytest requests playwright streamlit
+          pip install -r backend/requirements.txt
           playwright install --with-deps
 
       - name: Start Streamlit app
