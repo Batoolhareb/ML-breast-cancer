@@ -35,7 +35,7 @@ jobs:
 
       - name: Start Streamlit app
         run: |
-          nohup streamlit run index.py --server.port 8501 > streamlit.log 2>&1 &
+          nohup streamlit run frontend/index.py --server.port 8501 > streamlit.log 2>&1 &
 
       - name: Wait for frontend (Streamlit) to be ready
         run: |
@@ -48,7 +48,11 @@ jobs:
             echo "Still waiting for frontend... ($i)"
             sleep 2
           done
+          
+      - name: Run frontend tests
+        run: pytest frontend/test_frontend.py
 
+        
       - name: Wait for backend to be ready
         run: |
           echo "Waiting for backend on port 8080..."
@@ -60,9 +64,6 @@ jobs:
             echo "Still waiting for backend... ($i)"
             sleep 3
           done
-
-      - name: Run frontend tests
-        run: pytest frontend/test_frontend.py
 
       - name: Run backend tests
         run: pytest backend/test_main.py
