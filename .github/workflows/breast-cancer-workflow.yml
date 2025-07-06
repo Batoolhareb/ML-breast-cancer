@@ -1,8 +1,6 @@
 name: breast-cancer-workflow
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
