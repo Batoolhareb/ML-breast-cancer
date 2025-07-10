@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 @pytest.fixture
 def client(monkeypatch):
     # Set required environment variables
-    monkeypatch.setenv("MODELNAME", "test_model")
+    monkeypatch.setenv("MODELNAME", "BeastCancer_DT")
     monkeypatch.setenv("MODELVERSION", "1")
     
     # Mock MLflow modules
