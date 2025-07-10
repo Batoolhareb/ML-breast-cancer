@@ -29,11 +29,11 @@ jobs:
             APP_DIR=~/app-directory
             REPO_URL=https://github.com/Batoolhareb/ML-breast-cancer.git
 
-            mkdir -p \$APP_DIR
-            cd \$APP_DIR
+            mkdir -p $APP_DIR
+            cd $APP_DIR
 
             if [ ! -d ".git" ]; then
-              git clone \$REPO_URL .
+              git clone $REPO_URL .
             else
               git pull origin main
             fi
