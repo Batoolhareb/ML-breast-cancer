@@ -4,7 +4,7 @@
             set -e
 
             APP_DIR=~/app-directory
-            REPO_URL=https://github.com/YOUR_USERNAME/YOUR_REPO.git
+            REPO_URL=https://github.com/Batoolhareb/ML-breast-cancer.git
 
             mkdir -p \$APP_DIR
             cd \$APP_DIR
