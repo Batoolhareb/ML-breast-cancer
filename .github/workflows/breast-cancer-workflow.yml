@@ -7,6 +7,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      MODELNAME: "BeastCancer_DT"
+      MODELVERSION: "1"
+      MLFLOW_TRACKING_URI: "http://localhost:5000"
 
     steps:
       - name: Checkout repository
@@ -28,13 +32,78 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest requests playwright streamlit
+          pip install pytest requests playwright streamlit mlflow scikit-learn pandas
           pip install -r backend/requirements.txt
           playwright install --with-deps
 
+      - name: Start MLflow server
+        run: |
+          mkdir -p mlruns
+          nohup mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns > mlflow.log 2>&1 &
+
+      - name: Create and register dummy model
+        run: |
+          python -c "
+          import mlflow
+          from sklearn.dummy import DummyClassifier
+          import numpy as np
+          
+          mlflow.set_tracking_uri('http://localhost:5000')
+          
+          # Create dummy model
+          model = DummyClassifier(strategy='constant', constant=0)
+          X = np.zeros((10, 9))
+          y = np.zeros(10)
+          model.fit(X, y)
+          
+          # Log model
+          with mlflow.start_run():
+              mlflow.sklearn.log_model(model, 'model')
+              run_id = mlflow.active_run().info.run_id
+          
+          # Register model
+          client = mlflow.tracking.MlflowClient()
+          client.create_registered_model('cancer-model')
+          client.create_model_version(
+              name='cancer-model',
+              source=f'mlruns/0/{run_id}/artifacts/model',
+              run_id=run_id
+          )
+          "
+
+      - name: Start backend server
+        run: |
+          cd backend
+          nohup uvicorn main:app --host 0.0.0.0 --port 8080 > backend.log 2>&1 &
+
       - name: Start Streamlit app
         run: |
-          nohup streamlit run frontend/index.py --server.port 8501 > streamlit.log 2>&1 &
+          cd frontend
+          nohup streamlit run index.py --server.port 8501 > streamlit.log 2>&1 &
+
+      - name: Wait for MLflow server
+        run: |
+          echo "Waiting for MLflow on port 5000..."
+          for i in {1..15}; do
+            if curl -s http://localhost:5000 > /dev/null; then
+              echo "MLflow server ready!"
+              break
+            fi
+            echo "Waiting for MLflow... ($i)"
+            sleep 2
+          done
+
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend on port 8080..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/ > /dev/null; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Still waiting for backend... ($i)"
+            sleep 3
+          done
 
       - name: Wait for frontend (Streamlit) to be ready
         run: |
@@ -47,26 +116,21 @@ jobs:
             echo "Still waiting for frontend... ($i)"
             sleep 2
           done
-          
+
       - name: Run frontend tests
         run: pytest frontend/test_frontend.py
 
-        
-      - name: Wait for backend to be ready
-        run: |
-          echo "Waiting for backend on port 8080..."
-          for i in {1..30}; do
-            if curl -s http://localhost:8080/docs > /dev/null; then
-              echo "Backend is ready!"
-              break
-            fi
-            echo "Still waiting for backend... ($i)"
-            sleep 3
-          done
-
       - name: Run backend tests
-        run: pytest backend/test/test_main.py
+        run: |
+          cd backend
+          pytest test/test_main.py
 
-      - name: Show Streamlit logs on failure
+      - name: Show logs on failure
         if: failure()
-        run: cat streamlit.log
+        run: |
+          echo "===== MLflow Logs ====="
+          cat mlflow.log || echo "No MLflow log found"
+          echo "===== Backend Logs ====="
+          cat backend/backend.log || echo "No backend log found"
+          echo "===== Streamlit Logs ====="
+          cat frontend/streamlit.log || echo "No Streamlit log found"
