@@ -1,23 +1,60 @@
+version: "3.8"
+
 services:
-  backend: 
-    build: ./backend 
+  mlflow:
+    build: ./machine-learning/mlflow
+    image: ghcr.io/mlflow/mlflow
+    container_name: mlflow-server
+    ports:
+      - "5001:5000"
+    volumes:
+      - mlruns:/mlruns
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
     container_name: backend-cancer
-    ports: 
+    ports:
       - "8080:8000"
-    volumes: 
+    volumes:
       - ./dataset:/dataset:ro
+      - mlruns:/mlruns
       - ./model:/model:ro
-    restart: unless-stopped 
+    depends_on:
+      mlflow:
+        condition: service_started
+      ml_training:
+        condition: service_completed_successfully
+    environment:
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"  # Add this line
+      MODELNAME: BeastCancer_DT
+      MODELVERSION: "1"
+    restart: unless-stopped
+
+  ml_training:
+    build: ./machine-learning
+    container_name: ml-training
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./dataset:/dataset:ro
+      - mlruns:/mlruns
+    profiles: ["job"]
+    depends_on:
+       mlflow:
+        condition: service_started
 
   frontend:
     build: ./frontend
-    environment:
-      BACKEND_URL: "http://backend:8000" 
     container_name: frontend-cancer
     ports:
       - "80:8501"
-    restart: unless-stopped 
-volumes:
-  dataset:
+    environment:
+      BACKEND_URL: "http://backend:8000"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
 
-  model:
+volumes:
+  mlruns:
