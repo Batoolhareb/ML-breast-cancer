@@ -1,47 +1,20 @@
-name: Deploy to EC2
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    name: Deploy Docker Compose App to EC2
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
       - name: SSH and deploy
         run: |
           ssh -tt ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
 
-            # Change to your target directory
             APP_DIR=~/app-directory
-            REPO_URL=https://github.com/Batoolhareb/ML-breast-cancer.git
+            REPO_URL=https://github.com/YOUR_USERNAME/YOUR_REPO.git
 
-            # Create if doesn't exist
             mkdir -p \$APP_DIR
             cd \$APP_DIR
 
-            # Clone if not a git repo
             if [ ! -d ".git" ]; then
               git clone \$REPO_URL .
             else
               git pull origin main
             fi
 
-            # Deploy app
             docker compose down
             docker compose up -d --build
 
