@@ -42,4 +42,4 @@ jobs:
             docker compose up -d --build
 
             exit
-EOF
+            EOF
