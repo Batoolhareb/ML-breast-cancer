@@ -1,7 +1,5 @@
-fastapi
-uvicorn
 pydantic
-joblib
 pandas
 matplotlib
+mlflow
 scikit-learn
