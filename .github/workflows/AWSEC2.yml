@@ -51,8 +51,9 @@ jobs:
               git pull origin main
             fi
 
-            sudo docker compose down
-            sudo docker compose up -d --build
+            # Run Docker Compose with profile `job`
+            sudo docker compose --profile job down || true
+            sudo docker compose --profile job up -d --build
 
             exit
             EOF
