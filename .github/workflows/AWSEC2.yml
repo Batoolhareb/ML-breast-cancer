@@ -16,12 +16,13 @@ jobs:
 
       - name: Set up SSH key
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: SSH and deploy Docker Compose app
+      - name: SSH into EC2 and deploy Docker Compose app
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
@@ -34,14 +35,14 @@ jobs:
             fi
 
             cd "$APP_DIR"
-            git reset --hard
-            git clean -fd
-            git pull origin main
 
-            # Build Docker Compose images with the 'job' profile
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            # Build Docker Compose images with 'job' profile
             sudo docker compose --profile job build
 
-            # Run containers detached
+            # Run containers (foreground mode, as you specified)
             sudo docker compose --profile job up
-
-            EOF
+          EOF
