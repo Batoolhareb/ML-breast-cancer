@@ -13,8 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Print secret info (masked)
         run: |
+          echo "EC2_USER: ${{ secrets.EC2_USER }}"
+          echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+
+      - name: Set up SSH key with debug
+        run: |
+          set -x
           mkdir -p ~/.ssh
           printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -22,6 +28,7 @@ jobs:
 
       - name: Test SSH connection to EC2
         run: |
+          set -x
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo connected"
 
       - name: SSH into EC2 and deploy Docker Compose app
