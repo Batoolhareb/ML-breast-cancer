@@ -13,28 +13,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up SSH key with debug (preserve multiline key)
+      - name: Set up SSH key
         run: |
-          set -x
+          set -xe
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          printf "%s\n" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.EC2_SSH_PORT || '22' }} -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts || true
 
-      - name: Test SSH connection to EC2 (verbose)
+      - name: Test SSH connection
         run: |
-          set -x
-          ssh -vvv -p ${{ secrets.EC2_SSH_PORT || '22' }} -o StrictHostKeyChecking=no \
-            -i ~/.ssh/id_rsa \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo connected"
+          set -xe
+          ssh -p ${{ secrets.EC2_SSH_PORT || '22' }} \
+              -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+              "echo Connected to EC2"
 
-      - name: SSH into EC2 and deploy Docker Compose app
+      - name: Deploy Docker Compose app on EC2
         run: |
-          ssh -p ${{ secrets.EC2_SSH_PORT || '22' }} -o StrictHostKeyChecking=no \
-            -i ~/.ssh/id_rsa \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -p ${{ secrets.EC2_SSH_PORT || '22' }} \
+              -o StrictHostKeyChecking=no \
+              -i ~/.ssh/id_rsa \
+              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -xe
-
             APP_DIR=~/app-directory
             REPO_URL=https://github.com/Batoolhareb/ML-breast-cancer.git
 
@@ -49,5 +51,5 @@ jobs:
             git clean -fd
 
             sudo docker compose --profile job build
-            sudo docker compose --profile job up
+            sudo docker compose --profile job up -d
           EOF
