@@ -17,6 +17,7 @@ jobs:
         run: |
           echo "EC2_USER: ${{ secrets.EC2_USER }}"
           echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+          echo "EC2_SSH_PORT: ${{ secrets.EC2_SSH_PORT || '22' }}"
 
       - name: Set up SSH key with debug
         run: |
@@ -24,16 +25,16 @@ jobs:
           mkdir -p ~/.ssh
           printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.EC2_SSH_PORT || '22' }} -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts || true
 
       - name: Test SSH connection to EC2
         run: |
           set -x
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo connected"
+          ssh -p ${{ secrets.EC2_SSH_PORT || '22' }} -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo connected"
 
       - name: SSH into EC2 and deploy Docker Compose app
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -p ${{ secrets.EC2_SSH_PORT || '22' }} -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -xe
 
             APP_DIR=~/app-directory
