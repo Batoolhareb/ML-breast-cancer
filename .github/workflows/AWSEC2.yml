@@ -13,11 +13,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up SSH key with debug
+      - name: Set up SSH key with debug (preserve multiline key)
         run: |
           set -x
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.EC2_SSH_PORT || '22' }} -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts || true
 
