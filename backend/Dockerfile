@@ -9,8 +9,6 @@ RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/
 
 COPY requirements.txt .
 
-RUN pip install --upgrade pip setuptools wheel
-
 # Optional: split install
 RUN pip install --no-cache-dir --use-deprecated=legacy-resolver -r requirements.txt
 

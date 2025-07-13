@@ -15,6 +15,7 @@ def client(monkeypatch):
     mlflow_mock.pyfunc = mlflow_pyfunc
     sys.modules['mlflow'] = mlflow_mock
     sys.modules['mlflow.pyfunc'] = mlflow_pyfunc
+    sys.modules['mlflow.sklearn'] = MagicMock()  # Add this line
     
     # Create mock model
     mock_model = MagicMock()
@@ -26,6 +27,7 @@ def client(monkeypatch):
         del sys.modules['main']
     from main import app
     return TestClient(app)
+
 
 def test_root(client):
     response = client.get("/")
